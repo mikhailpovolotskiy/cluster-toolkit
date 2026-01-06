@@ -101,6 +101,8 @@ def resolve_network_storage() -> List[NSMount]:
 
 
 def is_controller_mount(mount) -> bool:
+    if mount.fs_type == "gcsfuse":
+        return False
     # NOTE: Valid Lustre server_ip can take the form of '<IP>@tcp'
     server_ip = mount.server_ip.split("@")[0]
     mount_addr = util.host_lookup(server_ip)
@@ -298,7 +300,7 @@ def setup_nfs_exports():
     exported_mounts = [m for m in resolve_network_storage() if is_controller_mount(m)]
 
     # key by remote mount path since that is what needs exporting
-    to_export = {m.remote_mount: "*(rw,no_subtree_check,no_root_squash)" for m in exported_mounts}
+    to_export = {m.remote_mount: "10.0.0.0/8(rw,no_subtree_check,no_root_squash)" for m in exported_mounts}
 
     key_mount = lkp.slurm_key_mount if lkp.cfg.enable_slurm_auth else lkp.munge_mount
     if is_controller_mount(key_mount):

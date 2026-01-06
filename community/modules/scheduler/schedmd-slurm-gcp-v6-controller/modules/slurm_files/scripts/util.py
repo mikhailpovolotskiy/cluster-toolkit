@@ -568,13 +568,13 @@ def install_custom_scripts(check_hash:bool=False):
             # consider using gCRC32C
             need_update = hash_file(fullpath) != source.md5_hash
 
-        log.info(f"installing custom script: {path} from {source.name}")
-
         if isinstance(source,os.DirEntry):
             shutil.copy(source.path, fullpath) #Needs to be copied since mounted nfs is read-only
             chown_slurm(fullpath, mode=0o755)
 
         elif need_update:
+            log.info(f"installing custom script: {path} from {source.name}")
+
             with fullpath.open("wb") as f:
                 source.download_to_file(f)
             chown_slurm(fullpath, mode=0o755)
@@ -1997,12 +1997,14 @@ class Lookup:
         machine_conf.sockets = machine.sockets
         # the value below for SocketsPerBoard must be type int
         machine_conf.sockets_per_board = machine_conf.sockets // machine_conf.boards
-        machine_conf.threads_per_core = 1
+        machine_conf.threads_per_core = getThreadsPerCore(template)
         _div = 2 if getThreadsPerCore(template) == 1 else 1
         machine_conf.cpus = (
             int(machine.guest_cpus / _div) if machine.supports_smt else machine.guest_cpus
         )
-        machine_conf.cores_per_socket = int(machine_conf.cpus / machine_conf.sockets)
+        machine_conf.cores_per_socket = int(
+            machine_conf.cpus / machine_conf.threads_per_core / machine_conf.sockets
+        )
         # Because the actual memory on the host will be different than
         # what is configured (e.g. kernel will take it). From
         # experiments, about 16 MB per GB are used (plus about 400 MB
