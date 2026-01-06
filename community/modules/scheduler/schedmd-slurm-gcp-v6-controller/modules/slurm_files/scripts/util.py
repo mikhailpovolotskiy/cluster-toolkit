@@ -588,13 +588,13 @@ def install_custom_scripts(check_hash:bool=False):
             # consider using gCRC32C
             need_update = hash_file(fullpath) != source.md5_hash
 
-        log.info(f"installing custom script: {path} from {source.name}")
-
         if isinstance(source,os.DirEntry):
             shutil.copy(source.path, fullpath) #Needs to be copied since mounted nfs is read-only
             chown_slurm(fullpath, mode=0o755)
 
         elif need_update:
+            log.info(f"installing custom script: {path} from {source.name}")
+
             with fullpath.open("wb") as f:
                 source.download_to_file(f)
             chown_slurm(fullpath, mode=0o755)
