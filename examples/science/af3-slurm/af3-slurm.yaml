@@ -288,7 +288,7 @@ deployment_groups:
     settings:
       name_prefix: login
       enable_login_public_ips: false
-      machine_type: e2-small
+      machine_type: e2-medium
       disk_type: pd-standard
       disk_size_gb: $(vars.disk_size_gb)
 
@@ -308,7 +308,7 @@ deployment_groups:
       enable_controller_public_ips: false
       disk_type: pd-standard
       disk_size_gb: $(vars.disk_size_gb)
-      machine_type: e2-small
+      machine_type: e2-medium
       enable_external_prolog_epilog: true
       # login_startup_script: $(login_startup.startup_script)
       controller_startup_script: $(controller_startup.startup_script)
