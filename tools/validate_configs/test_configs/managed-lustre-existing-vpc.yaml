@@ -13,19 +13,27 @@
 # limitations under the License.
 
 ---
-- name: Assert variables are defined
-  ansible.builtin.assert:
-    that:
-    - custom_vars.execution_host_count is defined
-- name: Test that execution hosts have joined cluster
-  ansible.builtin.shell: |
-    set -e -o pipefail
-    pbsnodes -aS | \
-        tail -n +3 | \
-        awk '{ if ($2 == "free") { print } }' | \
-        wc -l
-  register: pbsnodes_status
-  changed_when: False
-  until: pbsnodes_status.stdout == custom_vars.execution_host_count
-  retries: 30
-  delay: 10
+
+blueprint_name: managed-lustre-net
+
+vars:
+  project_id: hpc-toolkit-demo
+  deployment_name: network
+  region: europe-west4
+  zone: europe-west4-a
+  lustre_instance_id: lustre-instance
+
+deployment_groups:
+- group: primary
+  modules:
+  - id: network1
+    source: modules/network/pre-existing-vpc
+
+  - id: managed_lustre
+    source: modules/file-system/managed-lustre
+    use: [network1]
+    settings:
+      name: $(vars.lustre_instance_id)
+      local_mount: /lustre
+      remote_mount: lustrefs
+      private_vpc_connection_peering: "servicenetworking-googleapis-com"
