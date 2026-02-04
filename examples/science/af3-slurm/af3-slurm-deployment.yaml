@@ -83,7 +83,7 @@ vars:
     memory: 80
     cpu_count: 12
     node_count_static: 0             # number of static inference nodes; 1 GPU = 1 model inference
-    node_count_dynamic: 1           # number of dynamic inference nodes
+    node_count_dynamic: 2            # number of dynamic inference nodes
 
   inference_a2u_partition:
     name: infa2u
@@ -91,4 +91,4 @@ vars:
     memory: 160
     cpu_count: 12
     node_count_static: 0             # number of static inference nodes; 1 GPU = 1 model inference
-    node_count_dynamic: 5           # number of dynamic inference nodes
+    node_count_dynamic: 5            # number of dynamic inference nodes
