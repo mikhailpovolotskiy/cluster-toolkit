@@ -39,6 +39,7 @@ DEFAULT_NUM_RECYCLES="{{ num_recycles }}"
 DEFAULT_NUM_DIFFUSION_SAMPLES="{{ num_diffusion_samples }}"
 DEFAULT_NUM_SEEDS="{{ num_seeds }}"
 DEFAULT_SAVE_EMBEDDINGS="{{ save_embeddings }}"
+DEFAULT_COMPRESS_LARGE_OUTPUT_FILES="{{ compress_large_output_files }}"
 
 # --- Fixed Configuration (Set via Ansible Variables) ---
 CONTAINER_IMAGE="{{ sif_dir }}/af3.sif"
@@ -63,6 +64,7 @@ NUM_RECYCLES="${DEFAULT_NUM_RECYCLES}"
 NUM_DIFFUSION_SAMPLES="${DEFAULT_NUM_DIFFUSION_SAMPLES}"
 NUM_SEEDS="${DEFAULT_NUM_SEEDS}"
 SAVE_EMBEDDINGS="${DEFAULT_SAVE_EMBEDDINGS}"
+COMPRESS_LARGE_OUTPUT_FILES="${DEFAULT_COMPRESS_LARGE_OUTPUT_FILES}"
 
 
 # --- Helper Functions ---
@@ -104,6 +106,7 @@ usage() {
   local default_num_diffusion_disp="${DEFAULT_NUM_DIFFUSION_SAMPLES:-using AF3 run_alphafold.py defaults}"
   local default_num_seeds_disp="${DEFAULT_NUM_SEEDS:-using AF3 run_alphafold.py defaults}"
   local default_save_embeddings_disp="${DEFAULT_SAVE_EMBEDDINGS:-using AF3 run_alphafold.py defaults}"
+  local default_compress_large_output_files_disp="${DEFAULT_COMPRESS_LARGE_OUTPUT_FILES:-using AF3 run_alphafold.py defaults}"
   # --- End Pre-calculation ---
 
   cat << EOF
@@ -129,13 +132,15 @@ Options (override defaults):
   --log-base-dir DIR                 Base directory for logs (Default: '${default_log_base_dir_disp}')
 
 AlphaFold 3 Specific Options (Inference only):
-  --jax-compilation-cache-dir DIR    JAX cache directory (Inference only) (Default: ${default_jax_cache_disp})
-  --max-template-date DATE           Maximum template date (YYYY-MM-DD) (Default: ${default_max_template_date_disp})
-  --conformer-max-iterations NUM     Maximum conformer iterations (Default: ${default_conformer_iter_disp})
-  --num-recycles NUM                 Number of recycles (Default: ${default_num_recycles_disp})
-  --num-diffusion-samples NUM        Number of diffusion samples (Default: ${default_num_diffusion_disp})
-  --num-seeds NUM                    Number of seeds (Default: ${default_num_seeds_disp})
-  --save-embeddings VALUE            Save embeddings ('true'/'false') (Default: ${default_save_embeddings_disp})
+  --jax-compilation-cache-dir DIR       JAX cache directory (Inference only) (Default: ${default_jax_cache_disp})
+  --max-template-date DATE              Maximum template date (YYYY-MM-DD) (Default: ${default_max_template_date_disp})
+  --conformer-max-iterations NUM        Maximum conformer iterations (Default: ${default_conformer_iter_disp})
+  --num-recycles NUM                    Number of recycles (Default: ${default_num_recycles_disp})
+  --num-diffusion-samples NUM           Number of diffusion samples (Default: ${default_num_diffusion_disp})
+  --num-seeds NUM                       Number of seeds (Default: ${default_num_seeds_disp})
+  --save-embeddings VALUE               Save embeddings ('true'/'false') (Default: ${default_save_embeddings_disp})
+  --compress-large-output-files VALUE   Compress the output mmCIF and confidences JSON files using zstandard ('true'/'false').
+                                        (Default: ${default_compress_large_output_files_disp})
 
   -h, --help                         Display this help message and exit.
 
@@ -163,12 +168,13 @@ while [[ $# -gt 0 ]]; do
     --log-base-dir)   LOG_BASE_DIR="$2"; shift 2 ;;
     --jax-compilation-cache-dir)  JAX_COMPILATION_CACHE_DIR="$2"; shift 2 ;;
     # --- NEW AF3 ARG PARSING ---
-    --max-template-date)          MAX_TEMPLATE_DATE="$2"; shift 2 ;;
-    --conformer-max-iterations)   CONFORMER_MAX_ITERATIONS="$2"; shift 2 ;;
-    --num-recycles)               NUM_RECYCLES="$2"; shift 2 ;;
-    --num-diffusion-samples)      NUM_DIFFUSION_SAMPLES="$2"; shift 2 ;;
-    --num-seeds)                  NUM_SEEDS="$2"; shift 2 ;;
-    --save-embeddings)            SAVE_EMBEDDINGS="$2"; shift 2 ;;
+    --max-template-date)            MAX_TEMPLATE_DATE="$2"; shift 2 ;;
+    --conformer-max-iterations)     CONFORMER_MAX_ITERATIONS="$2"; shift 2 ;;
+    --num-recycles)                 NUM_RECYCLES="$2"; shift 2 ;;
+    --num-diffusion-samples)        NUM_DIFFUSION_SAMPLES="$2"; shift 2 ;;
+    --num-seeds)                    NUM_SEEDS="$2"; shift 2 ;;
+    --save-embeddings)              SAVE_EMBEDDINGS="$2"; shift 2 ;;
+    --compress-large-output-files)  COMPRESS_LARGE_OUTPUT_FILES="$2"; shift 2 ;;
     # --- END NEW AF3 ARG PARSING ---
     -h|--help)        usage; exit 0 ;;
     -*)               error_exit "Unknown option: $1" ;;
@@ -274,6 +280,7 @@ elif [ "$JOB_TYPE" = "inference" ]; then
     [ -n "$NUM_DIFFUSION_SAMPLES" ] && af3_extra_opts+=" --num_diffusion_samples=${NUM_DIFFUSION_SAMPLES}"
     [ -n "$NUM_SEEDS" ] && af3_extra_opts+=" --num_seeds=${NUM_SEEDS}"
     [ -n "$SAVE_EMBEDDINGS" ] && af3_extra_opts+=" --save_embeddings=${SAVE_EMBEDDINGS}"
+    [ -n "$COMPRESS_LARGE_OUTPUT_FILES" ] && af3_extra_opts+=" --compress_large_output_files=${COMPRESS_LARGE_OUTPUT_FILES}"
 
     job_specific_python_opts+="${af3_extra_opts}" # Append AF3 specific options
 fi
@@ -344,6 +351,7 @@ if [ "$JOB_TYPE" = "inference" ]; then
     echo "Num Diffusion Samples: ${NUM_DIFFUSION_SAMPLES:-AF3 default}"
     echo "Num Seeds: ${NUM_SEEDS:-AF3 default}"
     echo "Save Embeddings: ${SAVE_EMBEDDINGS:-AF3 default}"
+    echo "Compress Large Output Files: ${COMPRESS_LARGE_OUTPUT_FILES:-AF3 default}"
     echo "-------------------------------------"
 fi
 echo "--- Start: \$(date) ---"
@@ -356,7 +364,7 @@ set -x # Print command being executed
 
 apptainer run ${apptainer_nv_flag} \\
     ${bind_args_str} \\
-  "${CONTAINER_IMAGE}" python3 "${ALPHAFOLD_SCRIPT}" \\
+    "${CONTAINER_IMAGE}" python3 "${ALPHAFOLD_SCRIPT}" \\
     ${python_input_flag} "${python_input_value}" \\
     --output_dir "${OUTPUT_DIR}" \\
     ${run_data_pipeline_flag} \\

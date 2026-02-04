@@ -45,6 +45,7 @@ vars:
   num_diffusion_samples: ""
   num_seeds: ""
   save_embeddings: ""
+  compress_large_output_files: true
 
   # Choose if you want the AF3 Simple Service daemon started
   # af3service_activate: false
