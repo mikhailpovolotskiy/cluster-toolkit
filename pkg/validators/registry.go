@@ -18,4 +18,8 @@ package validators
 var Registry = map[string]RuleValidator{
 	"regex":        &RegexValidator{},
 	"allowed_enum": &AllowedEnumValidator{},
+	"range":        &RangeValidator{},
+	"exclusive":    &ExclusiveValidator{},
+	"required":     &RequiredValidator{},
+	"conditional":  &ConditionalValidator{},
 }
