@@ -52,15 +52,17 @@ var (
 				logging.Fatal("cmd.Help function failed: %s", err)
 			}
 		},
-		Version:     "v1.84.0",
+		Version:     config.GetToolkitVersion(),
 		Annotations: annotation,
 	}
 )
 
 func init() {
+	addDependenciesFlags(rootCmd.PersistentFlags())
 	addColorFlag(rootCmd.PersistentFlags())
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		initColor()
+		initDependencies(cmd)
 	}
 }
 
