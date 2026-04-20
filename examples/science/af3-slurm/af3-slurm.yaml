@@ -38,9 +38,15 @@ vars:
     destination: "install_ops_agent.sh"
     content: |
       #!/bin/bash
-      sudo yum remove -y stackdriver-agent google-fluentd google-cloud-logging-agent
+      # Repair the RPM database
+      sudo rm -f /var/lib/rpm/__db*
+      sudo rpm --rebuilddb
+      sudo yum clean all
+
       curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
-      sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+      sudo bash add-google-cloud-ops-agent-repo.sh
+      sudo yum remove -y stackdriver-agent google-fluentd google-cloud-logging-agent
+      sudo yum install -y google-cloud-ops-agent
 
   # login_runners:
   # - type: ansible-local
