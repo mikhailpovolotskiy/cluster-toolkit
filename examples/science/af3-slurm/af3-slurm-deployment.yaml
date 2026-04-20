@@ -39,6 +39,7 @@ vars:
   jax_compilation_cache_dir: "$HOME/jax_compilation_cache"     # give "" if you do not want to use jax compilation path
 
   # AF science parameters - use AF3 defaults if "", see AlphaFold 3 documentation
+  buckets: ""
   max_template_date: ""
   conformer_max_iterations: ""
   num_recycles: ""

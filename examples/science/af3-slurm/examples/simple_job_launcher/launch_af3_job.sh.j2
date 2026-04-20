@@ -33,6 +33,7 @@ DEFAULT_LOG_BASE_DIR="{{ af3_log_base_dir | default('$HOME/slurm_logs') }}"
 DEFAULT_JOB_NAME_BASE="{{ af3_job_name_base | default('alphafold3') }}"
 
 # --- AlphaFold 3 Science Variables (Set via Ansible Variables) ---
+DEFAULT_BUCKETS="{{ buckets }}"
 DEFAULT_MAX_TEMPLATE_DATE="{{ max_template_date }}"
 DEFAULT_CONFORMER_MAX_ITERATIONS="{{ conformer_max_iterations }}"
 DEFAULT_NUM_RECYCLES="{{ num_recycles }}"
@@ -58,6 +59,7 @@ INPUT_PATH="" OUTPUT_DIR=""
 GRES_USER_SET="false" # Flag to track if user provided --gres
 
 # Initialize AF3 science variables with defaults
+BUCKETS="${DEFAULT_BUCKETS}"
 MAX_TEMPLATE_DATE="${DEFAULT_MAX_TEMPLATE_DATE}"
 CONFORMER_MAX_ITERATIONS="${DEFAULT_CONFORMER_MAX_ITERATIONS}"
 NUM_RECYCLES="${DEFAULT_NUM_RECYCLES}"
@@ -100,6 +102,7 @@ usage() {
 
   # AF3 specific defaults - use :- expansion here to decide display text
   local default_jax_cache_disp="${DEFAULT_JAX_COMPILATION_CACHE_DIR:-using AF3 run_alphafold.py defaults}"
+  local default_buckets_disp="${DEFAULT_BUCKETS:-using AF3 run_alphafold.py defaults}"
   local default_max_template_date_disp="${DEFAULT_MAX_TEMPLATE_DATE:-using AF3 run_alphafold.py defaults}"
   local default_conformer_iter_disp="${DEFAULT_CONFORMER_MAX_ITERATIONS:-using AF3 run_alphafold.py defaults}"
   local default_num_recycles_disp="${DEFAULT_NUM_RECYCLES:-using AF3 run_alphafold.py defaults}"
@@ -133,6 +136,7 @@ Options (override defaults):
 
 AlphaFold 3 Specific Options (Inference only):
   --jax-compilation-cache-dir DIR       JAX cache directory (Inference only) (Default: ${default_jax_cache_disp})
+  --buckets LIST                        Comma-separated token sizes for compilation cache (Default: ${default_buckets_disp})
   --max-template-date DATE              Maximum template date (YYYY-MM-DD) (Default: ${default_max_template_date_disp})
   --conformer-max-iterations NUM        Maximum conformer iterations (Default: ${default_conformer_iter_disp})
   --num-recycles NUM                    Number of recycles (Default: ${default_num_recycles_disp})
@@ -168,6 +172,7 @@ while [[ $# -gt 0 ]]; do
     --log-base-dir)   LOG_BASE_DIR="$2"; shift 2 ;;
     --jax-compilation-cache-dir)  JAX_COMPILATION_CACHE_DIR="$2"; shift 2 ;;
     # --- NEW AF3 ARG PARSING ---
+    --buckets)                      BUCKETS="$2"; shift 2 ;;
     --max-template-date)            MAX_TEMPLATE_DATE="$2"; shift 2 ;;
     --conformer-max-iterations)     CONFORMER_MAX_ITERATIONS="$2"; shift 2 ;;
     --num-recycles)                 NUM_RECYCLES="$2"; shift 2 ;;
@@ -274,6 +279,7 @@ elif [ "$JOB_TYPE" = "inference" ]; then
 
     # --- Add AF3 science python options conditionally ---
     af3_extra_opts=""
+    [ -n "$BUCKETS" ] && af3_extra_opts+=" --buckets=${BUCKETS}"
     [ -n "$MAX_TEMPLATE_DATE" ] && af3_extra_opts+=" --max_template_date=\"${MAX_TEMPLATE_DATE}\""
     [ -n "$CONFORMER_MAX_ITERATIONS" ] && af3_extra_opts+=" --conformer_max_iterations=${CONFORMER_MAX_ITERATIONS}"
     [ -n "$NUM_RECYCLES" ] && af3_extra_opts+=" --num_recycles=${NUM_RECYCLES}"
@@ -345,6 +351,7 @@ if [ "$JOB_TYPE" = "inference" ]; then
     fi
     # Print AF3 specific options used
     echo "--- AlphaFold 3 Inference Options ---"
+    echo "Buckets: ${BUCKETS:-AF3 default}"
     echo "Max Template Date: ${MAX_TEMPLATE_DATE:-AF3 default}"
     echo "Conformer Max Iterations: ${CONFORMER_MAX_ITERATIONS:-AF3 default}"
     echo "Num Recycles: ${NUM_RECYCLES:-AF3 default}"
