@@ -1,7 +1,7 @@
 #### GENERAL DEVELOPMENT
 
 # Built Binary
-af3-slurm
+/af3-slurm
 ghpc
 gcluster
 # Expand artifact
