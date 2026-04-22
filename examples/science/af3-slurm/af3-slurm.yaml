@@ -1,4 +1,5 @@
 # Copyright 2026 Google LLC
+# Copyright 2026 Mikhail Povolotskii
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,19 +35,9 @@ vars:
 
 # Installs Google Cloud Ops Agent
   ops_agent_runner:
-  - type: shell
-    destination: "install_ops_agent.sh"
-    content: |
-      #!/bin/bash
-      # Repair the RPM database
-      sudo rm -f /var/lib/rpm/__db*
-      sudo rpm --rebuilddb
-      sudo yum clean all
-
-      curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
-      sudo bash add-google-cloud-ops-agent-repo.sh
-      sudo yum remove -y stackdriver-agent google-fluentd google-cloud-logging-agent
-      sudo yum install -y google-cloud-ops-agent
+  - type: ansible-local
+    destination: "configure_ops_agent.yml"
+    source: $(ghpc_stage(adm/configure_ops_agent.yml))
 
   # login_runners:
   # - type: ansible-local
