@@ -37,7 +37,7 @@ vars:
   ops_agent_runner:
   - type: ansible-local
     destination: "configure_ops_agent.yml"
-    source: $(ghpc_stage(adm/configure_ops_agent.yml))
+    source: $(ghpc_stage("adm/configure_ops_agent.yml"))
 
   # login_runners:
   # - type: ansible-local
