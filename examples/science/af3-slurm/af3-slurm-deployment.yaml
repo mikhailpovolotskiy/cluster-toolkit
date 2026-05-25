@@ -26,7 +26,7 @@ vars:
   deployment_name: af3-slurm         # adjust if necessary
   project_id: steam-habitat-480810-n7  # supply existing project id
   region: me-west1                   # supply region with C3D-highmem and GPU capacity
-  zone: me-west1-a                   # supply zone with C3D-highmem and GPU capacity
+  zone: me-west1-c                   # supply zone with C3D-highmem and GPU capacity
 
   # Required buckets for weights and databases
   modelweights_bucket: steam-habitat-480810-n7_weights  # name of your bucket with af3 model weights
