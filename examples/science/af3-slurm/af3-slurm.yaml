@@ -212,6 +212,7 @@ deployment_groups:
   #   source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
   #   use: [af3_network]
   #   settings:
+  #     enable_oslogin: false
   #     enable_spot_vm: true
   #     node_count_static: $(vars.datapipeline_c3dhm_partition.node_count_static)
   #     node_count_dynamic_max: $(vars.datapipeline_c3dhm_partition.node_count_dynamic)
@@ -235,6 +236,7 @@ deployment_groups:
     source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
     use: [af3_network]
     settings:
+      enable_oslogin: false
       enable_spot_vm: true
       node_count_static: $(vars.inference_g2_partition.node_count_static)
       node_count_dynamic_max: $(vars.inference_g2_partition.node_count_dynamic)
@@ -259,6 +261,7 @@ deployment_groups:
     source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
     use: [af3_network]
     settings:
+      enable_oslogin: false
       enable_spot_vm: true
       node_count_static: $(vars.inference_a2_partition.node_count_static)
       node_count_dynamic_max: $(vars.inference_a2_partition.node_count_dynamic)
@@ -283,6 +286,7 @@ deployment_groups:
     source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
     use: [af3_network]
     settings:
+      enable_oslogin: false
       enable_spot_vm: true
       node_count_static: $(vars.inference_a2u_partition.node_count_static)
       node_count_dynamic_max: $(vars.inference_a2u_partition.node_count_dynamic)
@@ -309,6 +313,7 @@ deployment_groups:
     settings:
       name_prefix: login
       enable_login_public_ips: false
+      enable_oslogin: false
       machine_type: e2-medium
       disk_type: pd-balanced
       disk_size_gb: $(vars.disk_size_gb)
@@ -327,6 +332,7 @@ deployment_groups:
     - output_bucket
     settings:
       enable_controller_public_ips: false
+      enable_oslogin: false
       disk_type: pd-balanced
       disk_size_gb: $(vars.disk_size_gb)
       machine_type: e2-medium
