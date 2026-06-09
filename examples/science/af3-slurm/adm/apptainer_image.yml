@@ -22,6 +22,20 @@
       name: epel-release
       state: present
 
+  - name: Protect GPU kernels and update system
+    ansible.builtin.shell:
+      executable: /bin/bash
+      cmd: |
+        set -e -o pipefail
+
+        # Protect the exact Intel network driver and GPU kernel dependencies
+        if ! grep -q "exclude=kernel\* kmod-idpf-irdma-base" /etc/dnf/dnf.conf; then
+            echo "exclude=kernel* kmod-idpf-irdma-base" >> /etc/dnf/dnf.conf
+        fi
+
+        # Apply all other system updates
+        dnf update -y
+
   - name: Install Apptainer packages from EPEL
     ansible.builtin.dnf:
       name:
@@ -29,10 +43,86 @@
       - apptainer-suid
       state: present
 
+  - name: Install Ops Agent packages
+    ansible.builtin.shell:
+      executable: /bin/bash
+      cmd: |
+        set -e -o pipefail
+
+        # Remove legacy agents
+        dnf remove -y stackdriver-agent google-fluentd catchpoint-fluentd google-cloud-monitoring || true
+
+        # Install Ops Agent
+        curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+        bash add-google-cloud-ops-agent-repo.sh --also-install
+
+        # Clean RPM database
+        rm -f /var/lib/rpm/__db*
+        rpm --rebuilddb
+
+  - name: Pre-populate Ops Agent config for Slurm toolkit
+    ansible.builtin.copy:
+      dest: /etc/google-cloud-ops-agent/config.yaml
+      content: |
+        logging:
+          receivers:
+            syslog:
+              type: files
+              include_paths:
+                - /var/log/messages
+                - /var/log/syslog
+            dummy_log:
+              type: files
+              include_paths:
+                - /tmp/ops-agent-dummy.log
+            setup:
+              type: files
+              include_paths:
+                - /var/log/slurm/setup.log
+            slurmd:
+              type: files
+              include_paths:
+                - /var/log/slurm/slurmd-*.log
+            slurmsync:
+              type: files
+              include_paths:
+                - /var/log/slurm/slurmsync.log
+            slurmctld:
+              type: files
+              include_paths:
+                - /var/log/slurm/slurmctld.log
+          processors: {}
+          service:
+            pipelines:
+              default_pipeline:
+                receivers: [dummy_log]
+              slurmlog_pipeline:
+                receivers: [setup, slurmd, slurmsync, slurmctld]
+                processors: []
+              slurmlog2_pipeline:
+                receivers: [syslog]
+                processors: []
+        metrics:
+          receivers:
+            hostmetrics:
+              type: hostmetrics
+              collection_interval: 60s
+          service:
+            pipelines:
+              default_pipeline:
+                receivers: [hostmetrics]
+
+  - name: Ensure Ops Agent is enabled and config is valid
+    ansible.builtin.service:
+      name: google-cloud-ops-agent
+      state: restarted
+      enabled: true
+
   - name: Install latest Nvidia driver
-    ansible.builtin.shell: |
-      #!/bin/bash
-      set -e -o pipefail
-      dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-      dnf clean all
-      dnf -y module install nvidia-driver:570-open
+    ansible.builtin.shell:
+      executable: /bin/bash
+      cmd: |
+        set -e -o pipefail
+        dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+        dnf clean all
+        dnf -y module install nvidia-driver:570-open
