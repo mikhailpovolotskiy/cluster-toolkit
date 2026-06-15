@@ -119,10 +119,12 @@
       enabled: true
 
   - name: Install latest Nvidia driver
+    vars:
+      os: "rhel{{ ansible_distribution_major_version }}"
     ansible.builtin.shell:
       executable: /bin/bash
       cmd: |
         set -e -o pipefail
-        dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+        dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/{{ os }}/x86_64/cuda-{{ os }}.repo
         dnf clean all
-        dnf -y module install nvidia-driver:570-open
+        dnf -y module install nvidia-driver:open-dkms
