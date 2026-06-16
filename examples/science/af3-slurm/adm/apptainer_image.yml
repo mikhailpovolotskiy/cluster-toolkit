@@ -22,20 +22,6 @@
       name: epel-release
       state: present
 
-  - name: Protect GPU kernels and update system
-    ansible.builtin.shell:
-      executable: /bin/bash
-      cmd: |
-        set -e -o pipefail
-
-        # Protect the exact Intel network driver and GPU kernel dependencies
-        if ! grep -q "exclude=kernel\* kmod-idpf-irdma-base" /etc/dnf/dnf.conf; then
-            echo "exclude=kernel* kmod-idpf-irdma-base" >> /etc/dnf/dnf.conf
-        fi
-
-        # Apply all other system updates
-        dnf update -y
-
   - name: Install Apptainer packages from EPEL
     ansible.builtin.dnf:
       name:
